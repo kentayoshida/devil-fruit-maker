@@ -4,6 +4,7 @@
 import { forwardRef } from "react";
 import { FruitVisual } from "./FruitVisual";
 import { TYPE_INFO } from "@/data/fruits";
+import { getPalette } from "@/data/palettes";
 import type { MatchResult } from "@/lib/matcher";
 import { rarityLabel, t, type Lang } from "@/lib/i18n";
 
@@ -25,6 +26,7 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
   ref
 ) {
   const typeInfo = TYPE_INFO[result.type];
+  const palette = getPalette(result.type, result.paletteIndex);
 
   return (
     <div
@@ -32,9 +34,12 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
       className="relative w-full max-w-md mx-auto rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white"
       style={{ aspectRatio: "9 / 16" }}
     >
-      {/* 背景の系統カラー */}
+      {/* 背景の実カラー（パレット由来） */}
       <div
-        className={`absolute inset-0 bg-gradient-to-br ${typeInfo.color} opacity-25`}
+        className="absolute inset-0 opacity-35"
+        style={{
+          backgroundImage: `linear-gradient(135deg, ${palette.cardFrom} 0%, ${palette.cardTo} 100%)`,
+        }}
       />
       {/* テクスチャ */}
       <div
@@ -72,7 +77,12 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
         {/* フルーツ画像 */}
         <div className="flex-1 flex items-center justify-center my-2">
           <div className="drop-shadow-2xl">
-            <FruitVisual type={result.type} seed={result.name.en} size={220} />
+            <FruitVisual
+              type={result.type}
+              seed={result.name.en}
+              paletteIndex={result.paletteIndex}
+              size={220}
+            />
           </div>
         </div>
 
@@ -89,7 +99,10 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
         {/* タイプバッジ */}
         <div className="mt-3 flex items-center justify-center gap-2">
           <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r ${typeInfo.color} text-white`}
+            className="px-3 py-1 text-xs font-semibold rounded-full text-white"
+            style={{
+              backgroundImage: `linear-gradient(to right, ${palette.cardFrom}, ${palette.cardTo})`,
+            }}
           >
             {typeInfo.label[lang]}
           </span>

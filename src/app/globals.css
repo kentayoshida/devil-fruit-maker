@@ -35,3 +35,35 @@ body {
 .animate-pulse-glow {
   animation: pulse-glow 0.8s ease-in-out infinite;
 }
+
+/* ガチャ用: ゆっくり回転する後光 */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 4s linear infinite;
+}
+
+/* ガチャ用: 実が小刻みに揺れる */
+@keyframes jitter {
+  0%   { transform: translate(0, 0)       rotate(0deg);   }
+  25%  { transform: translate(-2px, -1px) rotate(-2deg);  }
+  50%  { transform: translate(2px, -2px)  rotate(1.5deg); }
+  75%  { transform: translate(-1px, 2px)  rotate(-1deg);  }
+  100% { transform: translate(0, 0)       rotate(0deg);   }
+}
+.animate-jitter {
+  animation: jitter 0.18s ease-in-out infinite;
+}
+
+/* 結果カードの登場時、フラッシュを乗せる */
+@keyframes reveal-flash {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.animate-reveal-flash {
+  animation: reveal-flash 0.6s ease-out both;
+  pointer-events: none;
+}

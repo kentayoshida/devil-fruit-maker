@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { ResultCard } from "@/components/ResultCard";
-import { FruitVisual } from "@/components/FruitVisual";
+import { GachaReveal } from "@/components/GachaReveal";
 import { matchFruit, type MatchResult } from "@/lib/matcher";
 import { t } from "@/lib/i18n";
 import { useLang } from "@/lib/useLang";
@@ -22,12 +22,12 @@ export default function Home() {
     if (!targetName.trim()) return;
     setIsRevealing(true);
     setResult(null);
-    // 演出: 少し溜める
+    // ガチャ演出を見せる時間
     setTimeout(() => {
       setResult(matchFruit(targetName, rerollVal));
       setSubmittedName(targetName);
       setIsRevealing(false);
-    }, 700);
+    }, 1900);
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -124,19 +124,13 @@ export default function Home() {
         </form>
       )}
 
-      {/* 演出: 実が選ばれている */}
-      {isRevealing && (
-        <div className="mt-12 flex flex-col items-center gap-4">
-          <div className="animate-pulse-glow">
-            <FruitVisual type="paramecia" size={180} />
-          </div>
-          <p className="text-sm text-white/70">{t(lang, "submitting")}</p>
-        </div>
-      )}
+      {/* 演出: ガチャ風 */}
+      {isRevealing && <GachaReveal lang={lang} />}
 
       {/* 結果 */}
       {result && !isRevealing && (
-        <div className="w-full max-w-md mt-6 animate-pop-in">
+        <div className="w-full max-w-md mt-6 animate-pop-in relative">
+          <div className="absolute inset-0 bg-white rounded-3xl animate-reveal-flash z-10" />
           <ResultCard
             ref={cardRef}
             result={result}

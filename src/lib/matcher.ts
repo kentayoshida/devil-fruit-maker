@@ -9,6 +9,7 @@ import {
   LOGIA_STEMS,
   type Stem,
 } from "@/data/stems";
+import { CANON_PALETTE_INDEX, paletteCount } from "@/data/palettes";
 import { hashName, SeededRandom } from "@/lib/hash";
 
 export interface MatchResult {
@@ -18,6 +19,8 @@ export interface MatchResult {
   name: { ja: string; en: string };
   ability: { ja: string; en: string };
   user?: string; // カノンのときのみ
+  /** カラーパレットのインデックス（系統内） */
+  paletteIndex: number;
 }
 
 // タイプ比率: パラミシア 70% / ゾオン 20% / ロギア 10%（原作に忠実）
@@ -44,7 +47,7 @@ export function matchFruit(name: string, reroll: number = 0): MatchResult {
     const canonOfType = CANON_FRUITS.filter((f) => f.type === type);
     if (canonOfType.length > 0) {
       const fruit = rng.pick(canonOfType);
-      return canonToResult(fruit);
+      return canonToResult(fruit, rng);
     }
     // 該当タイプのカノンが無ければオリジナルにフォールバック
   }
@@ -53,7 +56,10 @@ export function matchFruit(name: string, reroll: number = 0): MatchResult {
   return generateOriginal(type, rng);
 }
 
-function canonToResult(f: CanonFruit): MatchResult {
+function canonToResult(f: CanonFruit, rng: SeededRandom): MatchResult {
+  // カノン実は ID で固定色、無ければシードから
+  const idx =
+    CANON_PALETTE_INDEX[f.id] ?? rng.nextInt(paletteCount(f.type));
   return {
     source: "canon",
     type: f.type,
@@ -61,6 +67,7 @@ function canonToResult(f: CanonFruit): MatchResult {
     name: f.name,
     ability: f.ability,
     user: f.user,
+    paletteIndex: idx,
   };
 }
 
@@ -83,12 +90,16 @@ function generateOriginal(type: FruitType, rng: SeededRandom): MatchResult {
   // レア度: ロギアは rare 以上、幻獣・古代種は legendary、それ以外は uncommon〜rare
   const rarity = determineOriginalRarity(type, stem, rng);
 
+  // オリジナルはシードからパレットを選ぶ
+  const paletteIndex = rng.nextInt(paletteCount(type));
+
   return {
     source: "original",
     type,
     rarity,
     name: { ja, en },
     ability: stem.ability,
+    paletteIndex,
   };
 }
 

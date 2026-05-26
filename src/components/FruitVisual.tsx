@@ -3,49 +3,18 @@
 "use client";
 
 import type { FruitType } from "@/data/fruits";
+import { getPalette, paletteCount } from "@/data/palettes";
 
 interface Props {
   type: FruitType;
   /** 形のバリエーションを決定するためのキー（実IDなど）。同じキーなら毎回同じ形 */
   seed?: string;
+  /** カラーパレットのインデックス。指定なければ seed から決定 */
+  paletteIndex?: number;
   size?: number;
 }
 
 type Shape = "sphere" | "apple" | "pear" | "heart" | "cluster" | "spike";
-
-// 系統別のベースカラー（メイン/ハイライト/シャドウ/渦溝/輪郭）
-const COLOR_MAP: Record<
-  FruitType,
-  {
-    base: string;
-    light: string;
-    dark: string;
-    groove: string; // 渦巻きの溝の影
-    outline: string;
-  }
-> = {
-  paramecia: {
-    base: "#9333ea",
-    light: "#d8b4fe",
-    dark: "#4c1d95",
-    groove: "#3b0764",
-    outline: "#2e1065",
-  },
-  zoan: {
-    base: "#ea580c",
-    light: "#fdba74",
-    dark: "#7c2d12",
-    groove: "#431407",
-    outline: "#431407",
-  },
-  logia: {
-    base: "#0ea5e9",
-    light: "#bae6fd",
-    dark: "#0c4a6e",
-    groove: "#082f49",
-    outline: "#0c4a6e",
-  },
-};
 
 // 軽量ハッシュ（FNV-1a 簡易版）
 function hash(s: string): number {
@@ -222,10 +191,15 @@ const SHAPE_PATHS: Record<Shape, string> = {
     "M 120 80 L 90 130 L 50 120 L 75 165 L 35 175 L 80 195 L 45 230 L 95 220 L 95 265 L 120 235 L 145 265 L 145 220 L 195 230 L 160 195 L 205 175 L 165 165 L 190 120 L 150 130 Z",
 };
 
-export function FruitVisual({ type, seed, size = 220 }: Props) {
-  const c = COLOR_MAP[type];
+export function FruitVisual({ type, seed, paletteIndex, size = 220 }: Props) {
+  // パレット: 明示 paletteIndex があればそれを使用、なければ seed から決定
+  const idx =
+    paletteIndex !== undefined
+      ? paletteIndex
+      : hash(seed || "fallback") % paletteCount(type);
+  const c = getPalette(type, idx);
   const shape = pickShape(type, seed);
-  const uid = `f${type}-${hash(seed || "") % 100000}`;
+  const uid = `f${type}-${idx}-${hash(seed || "") % 100000}`;
 
   return (
     <svg
