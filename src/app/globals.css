@@ -67,3 +67,86 @@ body {
   animation: reveal-flash 0.6s ease-out both;
   pointer-events: none;
 }
+
+/* ステージ間遷移: ボン!と出てくる */
+@keyframes stage-burst {
+  0%   { opacity: 0; transform: scale(0.3) rotate(-8deg); }
+  60%  { opacity: 1; transform: scale(1.12) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.animate-stage-burst {
+  animation: stage-burst 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* タイプ表示用の縦線スイープ */
+@keyframes type-sweep {
+  0%   { transform: translateX(-110%) skewX(-12deg); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translateX(110%)  skewX(-12deg); opacity: 0; }
+}
+.animate-type-sweep {
+  animation: type-sweep 0.9s ease-out both;
+}
+
+/* レア度: コモン用 ふわっとフェード */
+@keyframes rarity-fade {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-rarity-fade {
+  animation: rarity-fade 0.35s ease-out both;
+}
+
+/* スパーク: 各方向に飛ぶ小さな光 */
+@keyframes spark-fly {
+  0%   { transform: translate(0, 0) scale(0); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translate(var(--dx, 40px), var(--dy, -40px)) scale(1); opacity: 0; }
+}
+.animate-spark-fly {
+  animation: spark-fly 0.9s ease-out both;
+}
+
+/* 拡大する円リング（レア用） */
+@keyframes ring-expand {
+  0%   { transform: scale(0.4); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.animate-ring-expand {
+  animation: ring-expand 1.2s ease-out both;
+}
+
+/* 光線が回転（レジェンド用） */
+@keyframes rays-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-rays-rotate {
+  animation: rays-rotate 2.4s linear infinite;
+}
+
+/* レジェンド用: 画面シェイク */
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0); }
+  10%      { transform: translate(-3px, 1px); }
+  20%      { transform: translate(3px, -2px); }
+  30%      { transform: translate(-2px, 2px); }
+  40%      { transform: translate(2px, 1px); }
+  50%      { transform: translate(-1px, -2px); }
+  60%      { transform: translate(2px, 2px); }
+  70%      { transform: translate(-2px, -1px); }
+  80%      { transform: translate(1px, 2px); }
+  90%      { transform: translate(-1px, -1px); }
+}
+.animate-screen-shake {
+  animation: screen-shake 0.6s ease-in-out;
+}
+
+/* レジェンド用: ゆっくり強く光るバックグロー */
+@keyframes legendary-glow {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+.animate-legendary-glow {
+  animation: legendary-glow 1.2s ease-in-out infinite;
+}

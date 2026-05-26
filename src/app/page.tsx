@@ -3,10 +3,25 @@
 import { useRef, useState } from "react";
 import { ResultCard } from "@/components/ResultCard";
 import { GachaReveal } from "@/components/GachaReveal";
+import { TypeReveal } from "@/components/TypeReveal";
+import { RarityReveal } from "@/components/RarityReveal";
 import { matchFruit, type MatchResult } from "@/lib/matcher";
 import { t } from "@/lib/i18n";
 import { useLang } from "@/lib/useLang";
 import { shareOrDownload } from "@/lib/share";
+
+// ステージ遷移管理
+type Stage = "idle" | "spinning" | "type" | "rarity" | "result";
+
+// レア度ごとの演出時間（タメ含む）
+const RARITY_STAGE_DURATION: Record<MatchResult["rarity"], number> = {
+  common: 900,
+  uncommon: 1100,
+  rare: 1500,
+  legendary: 2400,
+};
+const SPINNING_DURATION = 1100;
+const TYPE_DURATION = 1300;
 
 export default function Home() {
   const [lang, setLang] = useLang();
@@ -14,20 +29,44 @@ export default function Home() {
   const [result, setResult] = useState<MatchResult | null>(null);
   const [reroll, setReroll] = useState(0);
   const [submittedName, setSubmittedName] = useState("");
-  const [isRevealing, setIsRevealing] = useState(false);
+  const [stage, setStage] = useState<Stage>("idle");
+  /** 結果は先に計算して保持。ステージ遷移と独立して扱う */
+  const [pendingResult, setPendingResult] = useState<MatchResult | null>(null);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  /** タイマーIDを保持してクリーンアップ */
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  function clearTimers() {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+  }
 
   function reveal(targetName: string, rerollVal: number) {
     if (!targetName.trim()) return;
-    setIsRevealing(true);
+    clearTimers();
+    const r = matchFruit(targetName, rerollVal);
+    setPendingResult(r);
+    setSubmittedName(targetName);
     setResult(null);
-    // ガチャ演出を見せる時間
-    setTimeout(() => {
-      setResult(matchFruit(targetName, rerollVal));
-      setSubmittedName(targetName);
-      setIsRevealing(false);
-    }, 1900);
+    setStage("spinning");
+
+    // ステージ遷移スケジュール
+    timersRef.current.push(
+      setTimeout(() => setStage("type"), SPINNING_DURATION)
+    );
+    timersRef.current.push(
+      setTimeout(
+        () => setStage("rarity"),
+        SPINNING_DURATION + TYPE_DURATION
+      )
+    );
+    timersRef.current.push(
+      setTimeout(() => {
+        setResult(r);
+        setStage("result");
+      }, SPINNING_DURATION + TYPE_DURATION + RARITY_STAGE_DURATION[r.rarity])
+    );
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -43,10 +82,13 @@ export default function Home() {
   }
 
   function onReset() {
+    clearTimers();
     setResult(null);
+    setPendingResult(null);
     setSubmittedName("");
     setReroll(0);
     setName("");
+    setStage("idle");
   }
 
   async function onShare() {
@@ -94,7 +136,7 @@ export default function Home() {
       </div>
 
       {/* 入力フォーム */}
-      {!result && !isRevealing && (
+      {stage === "idle" && (
         <form
           onSubmit={onSubmit}
           className="w-full max-w-md mt-8 flex flex-col gap-3"
@@ -124,11 +166,25 @@ export default function Home() {
         </form>
       )}
 
-      {/* 演出: ガチャ風 */}
-      {isRevealing && <GachaReveal lang={lang} />}
+      {/* ステージ1: ガチャ風スピン */}
+      {stage === "spinning" && <GachaReveal lang={lang} />}
 
-      {/* 結果 */}
-      {result && !isRevealing && (
+      {/* ステージ2: タイプ判定 */}
+      {stage === "type" && pendingResult && (
+        <TypeReveal type={pendingResult.type} lang={lang} />
+      )}
+
+      {/* ステージ3: レア度 */}
+      {stage === "rarity" && pendingResult && (
+        <RarityReveal
+          rarity={pendingResult.rarity}
+          type={pendingResult.type}
+          lang={lang}
+        />
+      )}
+
+      {/* ステージ4: 結果カード */}
+      {stage === "result" && result && (
         <div className="w-full max-w-md mt-6 animate-pop-in relative">
           <div className="absolute inset-0 bg-white rounded-3xl animate-reveal-flash z-10" />
           <ResultCard

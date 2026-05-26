@@ -32,9 +32,8 @@ export function GachaReveal({ lang }: Props) {
     const step = () => {
       count++;
       setTick(count);
-      // 加速度的に遅くしてタメをつくる: 70ms → 約260ms
-      const nextDelay = Math.min(70 + count * 12, 260);
-      timer = setTimeout(step, nextDelay);
+      // 一定速度で素早く切替（ステージ1なので短時間）
+      timer = setTimeout(step, 90);
     };
     timer = setTimeout(step, 70);
     return () => {
