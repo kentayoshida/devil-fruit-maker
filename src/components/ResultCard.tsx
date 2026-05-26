@@ -72,7 +72,7 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
         {/* フルーツ画像 */}
         <div className="flex-1 flex items-center justify-center my-2">
           <div className="drop-shadow-2xl">
-            <FruitVisual type={result.type} size={220} />
+            <FruitVisual type={result.type} seed={result.name.en} size={220} />
           </div>
         </div>
 
