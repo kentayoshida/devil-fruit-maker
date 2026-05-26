@@ -72,29 +72,18 @@ function pickShape(type: FruitType, seed: string | undefined): Shape {
 }
 
 // 渦巻き 1個を描く path（中央が原点、半径約8）
-// 凹んだ溝のように見せるため、暗い太線＋細いハイライト線で構成する。
-// symbol ではなく g で定義（symbol+use はクリップパス + 任意座標transformが不安定）
-function SwirlDefs({ groove, light }: { groove: string; light: string }) {
+// 暗い太線で渦巻きそのものを描き、グループ全体に deboss filter をかけて
+// 「凹んだ刻印」風に見せる
+function SwirlDefs({ groove }: { groove: string }) {
   return (
     <>
       <g id="swirl">
-        {/* 渦巻きの溝（暗い影） */}
         <path
           d="M 5 2 Q 5 -6 -2 -6 Q -8 -6 -8 0 Q -8 5 -3 5 Q 1 5 1 1 Q 1 -1 -1 -1"
           fill="none"
           stroke={groove}
-          strokeWidth="2.4"
+          strokeWidth="2.6"
           strokeLinecap="round"
-          opacity="0.85"
-        />
-        {/* 渦巻きのフチに細いハイライト */}
-        <path
-          d="M 5 1 Q 5 -7 -2 -7 Q -9 -7 -9 0"
-          fill="none"
-          stroke={light}
-          strokeWidth="0.8"
-          strokeLinecap="round"
-          opacity="0.55"
         />
       </g>
       <g id="swirl-sm">
@@ -102,9 +91,8 @@ function SwirlDefs({ groove, light }: { groove: string; light: string }) {
           d="M 3 1 Q 3 -4 -1 -4 Q -5 -4 -5 0 Q -5 3 -2 3 Q 0 3 0 1"
           fill="none"
           stroke={groove}
-          strokeWidth="1.8"
+          strokeWidth="1.9"
           strokeLinecap="round"
-          opacity="0.75"
         />
       </g>
     </>
@@ -248,6 +236,54 @@ export function FruitVisual({ type, seed, size = 220 }: Props) {
       aria-hidden="true"
     >
       <defs>
+        {/* Deboss フィルター: 渦巻きを「彫り込み」風に見せる
+            負の surfaceScale で凹みを表現し、左上から光を当てて
+            上端に影・下端にハイライトが入る。 */}
+        <filter
+          id={`${uid}-deboss`}
+          x="-20%"
+          y="-20%"
+          width="140%"
+          height="140%"
+          colorInterpolationFilters="sRGB"
+        >
+          {/* 渦巻き形状をぼかして lighting の入力に */}
+          <feGaussianBlur in="SourceAlpha" stdDeviation="0.55" result="blur" />
+          {/* 凹みのハイライト（下端に光が当たる） */}
+          <feSpecularLighting
+            in="blur"
+            surfaceScale="-3"
+            specularConstant="1.1"
+            specularExponent="22"
+            lightingColor="#ffffff"
+            result="specLight"
+          >
+            <feDistantLight azimuth="225" elevation="55" />
+          </feSpecularLighting>
+          <feComposite
+            in="specLight"
+            in2="SourceAlpha"
+            operator="in"
+            result="specClipped"
+          />
+          {/* 上端の暗いシャドウ（凹みのフチ）。SourceAlphaを左上にオフセット */}
+          <feOffset in="SourceAlpha" dx="-0.6" dy="-0.6" result="darkOffset" />
+          <feGaussianBlur in="darkOffset" stdDeviation="0.4" result="darkBlur" />
+          <feFlood floodColor="#000000" floodOpacity="0.7" result="darkColor" />
+          <feComposite
+            in="darkColor"
+            in2="darkBlur"
+            operator="in"
+            result="darkShadow"
+          />
+          {/* 合成: 元の渦巻き → 上シャドウ → 下ハイライト の順 */}
+          <feMerge>
+            <feMergeNode in="SourceGraphic" />
+            <feMergeNode in="darkShadow" />
+            <feMergeNode in="specClipped" />
+          </feMerge>
+        </filter>
+
         {/* 本体の立体感グラデーション */}
         <radialGradient id={`${uid}-body`} cx="33%" cy="28%" r="80%">
           <stop offset="0%" stopColor={c.light} />
@@ -270,7 +306,7 @@ export function FruitVisual({ type, seed, size = 220 }: Props) {
           <stop offset="100%" stopColor="rgba(0,0,0,0)" />
         </radialGradient>
 
-        <SwirlDefs groove={c.groove} light={c.light} />
+        <SwirlDefs groove={c.groove} />
 
         {/* シルエットをクリップとして使う（渦巻きを本体外にはみ出させない） */}
         <clipPath id={`${uid}-clip`}>
@@ -291,8 +327,8 @@ export function FruitVisual({ type, seed, size = 220 }: Props) {
         style={{ mixBlendMode: "multiply" }}
       />
 
-      {/* 渦巻き散布（実本体の中でのみ表示） */}
-      <g clipPath={`url(#${uid}-clip)`}>
+      {/* 渦巻き散布（実本体の中でのみ表示、deboss filter で凹み風に） */}
+      <g clipPath={`url(#${uid}-clip)`} filter={`url(#${uid}-deboss)`}>
         {SWIRL_DOTS_BY_SHAPE[shape].map((d, i) => {
           const useId = d.sm ? "swirl-sm" : "swirl";
           const scaleX = d.f ? -d.s : d.s;
