@@ -1,65 +1,198 @@
-import Image from "next/image";
+"use client";
+
+import { useRef, useState } from "react";
+import { ResultCard } from "@/components/ResultCard";
+import { FruitVisual } from "@/components/FruitVisual";
+import { matchFruit, type MatchResult } from "@/lib/matcher";
+import { t } from "@/lib/i18n";
+import { useLang } from "@/lib/useLang";
+import { shareOrDownload } from "@/lib/share";
 
 export default function Home() {
+  const [lang, setLang] = useLang();
+  const [name, setName] = useState("");
+  const [result, setResult] = useState<MatchResult | null>(null);
+  const [reroll, setReroll] = useState(0);
+  const [submittedName, setSubmittedName] = useState("");
+  const [isRevealing, setIsRevealing] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  function reveal(targetName: string, rerollVal: number) {
+    if (!targetName.trim()) return;
+    setIsRevealing(true);
+    setResult(null);
+    // 演出: 少し溜める
+    setTimeout(() => {
+      setResult(matchFruit(targetName, rerollVal));
+      setSubmittedName(targetName);
+      setIsRevealing(false);
+    }, 700);
+  }
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setReroll(0);
+    reveal(name, 0);
+  }
+
+  function onReroll() {
+    const next = reroll + 1;
+    setReroll(next);
+    reveal(submittedName, next);
+  }
+
+  function onReset() {
+    setResult(null);
+    setSubmittedName("");
+    setReroll(0);
+    setName("");
+  }
+
+  async function onShare() {
+    if (!cardRef.current || !result) return;
+    try {
+      const filename = `devil-fruit-${submittedName || "result"}.png`;
+      const title = t(lang, "appTitle");
+      const text = `${submittedName}${lang === "ja" ? "さんの悪魔の実は「" : "'s Devil Fruit: "}${result.name[lang]}${lang === "ja" ? "」" : ""}`;
+      const outcome = await shareOrDownload({
+        node: cardRef.current,
+        filename,
+        title,
+        text,
+      });
+      setShareNotice(
+        outcome === "shared"
+          ? lang === "ja" ? "共有しました" : "Shared"
+          : lang === "ja" ? "画像をダウンロードしました" : "Image downloaded"
+      );
+      setTimeout(() => setShareNotice(null), 2500);
+    } catch (err) {
+      console.error(err);
+      setShareNotice(lang === "ja" ? "共有に失敗しました" : "Share failed");
+      setTimeout(() => setShareNotice(null), 2500);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen flex flex-col items-center px-4 py-6 text-white">
+      {/* ヘッダー */}
+      <header className="w-full max-w-md flex items-center justify-between">
+        <div className="text-lg font-bold tracking-wide">
+          {t(lang, "appTitle")}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <button
+          onClick={() => setLang(lang === "ja" ? "en" : "ja")}
+          className="text-xs px-3 py-1 rounded-full border border-white/20 hover:bg-white/10"
+        >
+          {t(lang, "langSwitchTo")}
+        </button>
+      </header>
+
+      <div className="w-full max-w-md mt-4 text-sm text-white/70">
+        {t(lang, "appTagline")}
+      </div>
+
+      {/* 入力フォーム */}
+      {!result && !isRevealing && (
+        <form
+          onSubmit={onSubmit}
+          className="w-full max-w-md mt-8 flex flex-col gap-3"
+        >
+          <label htmlFor="name" className="text-sm font-medium">
+            {t(lang, "inputLabel")}
+          </label>
+          <input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t(lang, "inputPlaceholder")}
+            className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-fuchsia-400"
+            autoComplete="off"
+            autoCapitalize="off"
+            inputMode="text"
+            maxLength={50}
+          />
+          <button
+            type="submit"
+            disabled={!name.trim()}
+            className="w-full py-3 mt-2 rounded-xl font-semibold bg-gradient-to-r from-fuchsia-500 via-violet-500 to-sky-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg active:scale-[0.98] transition"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {t(lang, "submit")}
+          </button>
+        </form>
+      )}
+
+      {/* 演出: 実が選ばれている */}
+      {isRevealing && (
+        <div className="mt-12 flex flex-col items-center gap-4">
+          <div className="animate-pulse-glow">
+            <FruitVisual type="paramecia" size={180} />
+          </div>
+          <p className="text-sm text-white/70">{t(lang, "submitting")}</p>
         </div>
-      </main>
-    </div>
+      )}
+
+      {/* 結果 */}
+      {result && !isRevealing && (
+        <div className="w-full max-w-md mt-6 animate-pop-in">
+          <ResultCard
+            ref={cardRef}
+            result={result}
+            name={submittedName}
+            lang={lang}
+          />
+
+          {result.source === "canon" && result.user && (
+            <p className="mt-3 text-center text-xs text-white/60">
+              {t(lang, "canonUser")}: {result.user}
+            </p>
+          )}
+
+          {/* アクションボタン */}
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button
+              onClick={onShare}
+              className="py-3 rounded-xl font-semibold bg-white text-slate-900 shadow active:scale-[0.98] transition"
+            >
+              {t(lang, "sharePng")}
+            </button>
+            <button
+              onClick={onReroll}
+              className="py-3 rounded-xl font-semibold border border-white/20 hover:bg-white/10 active:scale-[0.98] transition"
+            >
+              {t(lang, "againButton")}
+            </button>
+          </div>
+
+          <button
+            onClick={onReset}
+            className="mt-3 w-full py-2 text-sm text-white/60 hover:text-white"
+          >
+            ← {t(lang, "backToTop")}
+          </button>
+
+          {shareNotice && (
+            <div className="mt-3 text-center text-xs text-emerald-300">
+              {shareNotice}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* About */}
+      <section className="w-full max-w-md mt-12 text-xs text-white/60 space-y-2">
+        <h2 className="text-sm font-semibold text-white/80">
+          {t(lang, "aboutTitle")}
+        </h2>
+        <p className="leading-relaxed">{t(lang, "aboutBody")}</p>
+      </section>
+
+      {/* ディスクレーマー */}
+      <footer className="w-full max-w-md mt-8 pt-6 border-t border-white/10 text-[10px] text-white/50 text-center pb-4">
+        {t(lang, "disclaimer")}
+      </footer>
+    </main>
   );
 }

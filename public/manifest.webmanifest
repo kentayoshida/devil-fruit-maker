@@ -1,0 +1,10 @@
+{
+  "name": "悪魔の実メーカー",
+  "short_name": "悪魔の実",
+  "description": "あなたの名前から、あなただけの悪魔の実が判明する。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#0f172a",
+  "icons": []
+}

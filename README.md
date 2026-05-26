@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Devil Fruit Maker / 悪魔の実メーカー
 
-## Getting Started
+ONE PIECE インスパイアのファンメイド・ジェネレーター。
+あなたの名前から、決定的に「あなただけの悪魔の実」が判明します。
 
-First, run the development server:
+> 本アプリは『ONE PIECE』にインスパイアされたファンメイド・**非公式**のアプリです。
+> 原作の著作権は尾田栄一郎氏および集英社に帰属します。
+
+## 特徴
+
+- **決定的マッチング**: 同じ名前を入力すれば常に同じ結果。「もう一度引く」で別の結果も試せる
+- **3系統対応**: パラミシア（70%）/ ゾオン（20%）/ ロギア（10%）の原作比率
+- **DB**: 原作カノンの実 約40種を収録、それ以外は名前のハッシュからオリジナル実を生成
+- **日英対応**: ユーザーが切替可能、localStorage 保存
+- **画像共有**: html-to-image でカードを PNG 化、Web Share API でシェア（フォールバック: ダウンロード）
+- **スマホファースト**: 9:16 縦長カードレイアウト
+
+## 開発
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## デプロイ（Vercel + 独自ドメイン）
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. GitHub にリポジトリを push
+2. Vercel で Import → ビルド設定はデフォルトで OK
+3. `Settings → Domains` から独自ドメインを追加（DNS は CNAME or A レコードで Vercel を指す）
+4. `src/app/layout.tsx`, `src/app/robots.ts`, `src/app/sitemap.ts` の `SITE_URL` を実ドメインに置換
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 技術スタック
 
-## Learn More
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS v4
+- html-to-image（クライアントサイドPNG生成）
 
-To learn more about Next.js, take a look at the following resources:
+## ライセンス
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+ソースコードは私的利用前提のファン作品です。商用利用は想定していません。

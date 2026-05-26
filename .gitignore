@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dev wrapper (Claude Code launch config)
+/.claude/
+
+# local reference assets (not part of the app)
+/sample pics/
