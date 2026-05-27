@@ -495,15 +495,37 @@ const ORIGINAL: GeneratedFruit[] = [
     visual: { shape: "spiked", color: "rugged stone gray with brown veins", accent: "rough rocky surface" } },
 ];
 
-export const GENERATED_FRUITS: GeneratedFruit[] = [...CANON, ...ORIGINAL];
+const ALL_FRUITS: GeneratedFruit[] = [...CANON, ...ORIGINAL];
+
+// 画像が public/fruits/{id}.png にまだ存在しない実の ID。
+// 原則として Imagen 生成画像のみを表示するため、これらはマッチング/ガチャから除外。
+// 画像生成完了後はこの Set から該当 ID を削除すること（git で履歴も残せる）。
+export const MISSING_IMAGE_IDS = new Set<string>([
+  "peta-peta",
+  "ori-tora",
+  "ori-pegasus",
+  "ori-cerberus",
+  "ori-orochi",
+  "ame-ame",
+  "kaze-kaze",
+  "iwa-iwa",
+]);
+
+/** 全エントリ（メタデータ参照用、未生成も含む） */
+export const ALL_GENERATED_FRUITS: GeneratedFruit[] = ALL_FRUITS;
+
+/** 表示候補（画像生成済みのみ）。matcher/GachaReveal はこちらを使う */
+export const GENERATED_FRUITS: GeneratedFruit[] = ALL_FRUITS.filter(
+  (f) => !MISSING_IMAGE_IDS.has(f.id)
+);
 
 export function findGeneratedFruitById(id: string): GeneratedFruit | undefined {
-  return GENERATED_FRUITS.find((f) => f.id === id);
+  return ALL_GENERATED_FRUITS.find((f) => f.id === id);
 }
 
-// 系統別のオリジナル ID 一覧
+// 系統別のオリジナル ID 一覧（生成済みのみ）
 export const ORIGINAL_BY_TYPE: Record<FruitType, string[]> = {
-  paramecia: ORIGINAL.filter((f) => f.type === "paramecia").map((f) => f.id),
-  zoan: ORIGINAL.filter((f) => f.type === "zoan").map((f) => f.id),
-  logia: ORIGINAL.filter((f) => f.type === "logia").map((f) => f.id),
+  paramecia: GENERATED_FRUITS.filter((f) => f.type === "paramecia" && f.source === "original").map((f) => f.id),
+  zoan: GENERATED_FRUITS.filter((f) => f.type === "zoan" && f.source === "original").map((f) => f.id),
+  logia: GENERATED_FRUITS.filter((f) => f.type === "logia" && f.source === "original").map((f) => f.id),
 };
