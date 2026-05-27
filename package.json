@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "generate-fruits": "tsx scripts/generate-fruits.mts",
-    "transparentize-fruits": "tsx scripts/transparentize-fruits.mts"
+    "transparentize-fruits": "tsx scripts/transparentize-fruits.mts",
+    "generate-type-icons": "tsx scripts/generate-type-icons.mts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

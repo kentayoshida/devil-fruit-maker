@@ -16,10 +16,11 @@ const TYPE_BG: Record<FruitType, string> = {
   logia: "from-sky-500 via-cyan-700 to-blue-900",
 };
 
-const TYPE_ICON: Record<FruitType, string> = {
-  paramecia: "✦",
-  zoan: "❖",
-  logia: "❂",
+// Imagen 4 で生成済みのエンブレム画像
+const TYPE_EMBLEM: Record<FruitType, string> = {
+  paramecia: "/types/paramecia.png",
+  zoan: "/types/zoan.png",
+  logia: "/types/logia.png",
 };
 
 export function TypeReveal({ type, lang }: Props) {
@@ -40,11 +41,19 @@ export function TypeReveal({ type, lang }: Props) {
         <div className="text-[10px] tracking-[0.3em] text-white/60">
           {lang === "ja" ? "判定タイプ" : "TYPE"}
         </div>
-        <div
-          className={`text-7xl font-black bg-gradient-to-br ${TYPE_BG[type]} bg-clip-text text-transparent drop-shadow-2xl leading-none`}
-        >
-          {TYPE_ICON[type]}
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={TYPE_EMBLEM[type]}
+          alt={info.label[lang]}
+          width={180}
+          height={180}
+          style={{
+            width: 180,
+            height: 180,
+            objectFit: "contain",
+            filter: "drop-shadow(0 10px 18px rgba(0,0,0,0.5))",
+          }}
+        />
         <div className="text-3xl font-bold text-white mt-1">
           {info.label[lang]}
         </div>
