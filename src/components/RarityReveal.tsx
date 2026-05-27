@@ -1,9 +1,18 @@
 // ステージ3: レア度の表示。レア度に応じて演出の派手さを変える
 "use client";
 
+import { useState } from "react";
 import type { FruitType } from "@/data/fruits";
 import type { MatchResult } from "@/lib/matcher";
 import { rarityLabel, type Lang } from "@/lib/i18n";
+
+// Imagen 4 で生成済みのレア度バッジ。未生成のものは onError で text フォールバック
+const RARITY_IMAGE: Record<MatchResult["rarity"], string> = {
+  common: "/rarity/common.png",
+  uncommon: "/rarity/uncommon.png",
+  rare: "/rarity/rare.png",
+  legendary: "/rarity/legendary.png",
+};
 
 interface Props {
   rarity: MatchResult["rarity"];
@@ -74,6 +83,9 @@ const RARITY_STYLE: Record<
 export function RarityReveal({ rarity, lang }: Props) {
   const s = RARITY_STYLE[rarity];
   const label = rarityLabel(lang, rarity);
+  // 画像読み込み失敗時はテキスト ★ にフォールバック
+  const [imgFailed, setImgFailed] = useState(false);
+  const useImage = !imgFailed;
 
   return (
     <div
@@ -171,11 +183,35 @@ export function RarityReveal({ rarity, lang }: Props) {
         <div className="text-[10px] tracking-[0.3em] text-white/60 text-center mb-1">
           {lang === "ja" ? "希少度" : "RARITY"}
         </div>
-        <div
-          className={`text-5xl ${s.color} text-center drop-shadow-2xl leading-tight`}
-        >
-          {s.label}
-        </div>
+        {useImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={RARITY_IMAGE[rarity]}
+            alt={label}
+            width={160}
+            height={160}
+            onError={() => setImgFailed(true)}
+            style={{
+              width: 160,
+              height: 160,
+              objectFit: "contain",
+              display: "block",
+              margin: "0 auto",
+              filter:
+                rarity === "legendary"
+                  ? "drop-shadow(0 0 24px rgba(252,211,77,0.55))"
+                  : rarity === "rare"
+                  ? "drop-shadow(0 0 18px rgba(125,211,252,0.45))"
+                  : "drop-shadow(0 6px 12px rgba(0,0,0,0.4))",
+            }}
+          />
+        ) : (
+          <div
+            className={`text-5xl ${s.color} text-center drop-shadow-2xl leading-tight`}
+          >
+            {s.label}
+          </div>
+        )}
         <div
           className={`mt-2 text-2xl font-black text-center tracking-widest ${s.text}`}
         >

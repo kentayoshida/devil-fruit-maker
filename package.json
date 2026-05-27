@@ -9,7 +9,8 @@
     "lint": "eslint",
     "generate-fruits": "tsx scripts/generate-fruits.mts",
     "transparentize-fruits": "tsx scripts/transparentize-fruits.mts",
-    "generate-type-icons": "tsx scripts/generate-type-icons.mts"
+    "generate-type-icons": "tsx scripts/generate-type-icons.mts",
+    "generate-rarity-icons": "tsx scripts/generate-rarity-icons.mts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
