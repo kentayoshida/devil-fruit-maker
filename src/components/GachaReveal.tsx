@@ -1,11 +1,9 @@
-// ガチャ風の演出。複数のカラフルな実が高速で切り替わり、
-// 中央の光が広がって最後に消える（その後、親が結果カードを描画）
+// ガチャ風の演出。生成済みの悪魔の実画像を高速でシャッフル表示
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FruitVisual } from "./FruitVisual";
-import { paletteCount } from "@/data/palettes";
-import type { FruitType } from "@/data/fruits";
+import { GENERATED_FRUITS } from "@/data/generated-fruits";
 import type { Lang } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 
@@ -13,18 +11,26 @@ interface Props {
   lang: Lang;
 }
 
-const SPIN_TYPES: FruitType[] = ["paramecia", "zoan", "logia"];
-const SPIN_SHAPES_SEEDS = [
-  "spin-a",
-  "spin-b",
-  "spin-c",
-  "spin-d",
-  "spin-e",
-  "spin-f",
-];
+// 軽量ハッシュベースのシャッフル順序生成
+function shuffleOrder<T>(arr: readonly T[], seed: number): T[] {
+  const a = arr.slice();
+  let s = seed;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (Math.imul(s, 0x01000193) ^ i) >>> 0;
+    const j = s % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 export function GachaReveal({ lang }: Props) {
   const [tick, setTick] = useState(0);
+
+  // この演出インスタンスごとに違う順序で並べる（前回と同じ流れに見せない）
+  const order = useMemo(
+    () => shuffleOrder(GENERATED_FRUITS, Date.now() >>> 0),
+    []
+  );
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -32,7 +38,6 @@ export function GachaReveal({ lang }: Props) {
     const step = () => {
       count++;
       setTick(count);
-      // 一定速度で素早く切替（ステージ1なので短時間）
       timer = setTimeout(step, 90);
     };
     timer = setTimeout(step, 70);
@@ -41,9 +46,18 @@ export function GachaReveal({ lang }: Props) {
     };
   }, []);
 
-  const type = SPIN_TYPES[tick % SPIN_TYPES.length];
-  const paletteIdx = (tick * 3) % paletteCount(type);
-  const seed = SPIN_SHAPES_SEEDS[tick % SPIN_SHAPES_SEEDS.length];
+  // 全画像を裏で preload してチラつき防止（初回マウント時に一度だけ）
+  const preloadedRef = useRef(false);
+  useEffect(() => {
+    if (preloadedRef.current) return;
+    preloadedRef.current = true;
+    for (const f of GENERATED_FRUITS) {
+      const img = new Image();
+      img.src = `/fruits/${f.id}.png`;
+    }
+  }, []);
+
+  const fruit = order[tick % order.length];
 
   return (
     <div className="mt-6 flex flex-col items-center gap-6">
@@ -54,12 +68,13 @@ export function GachaReveal({ lang }: Props) {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-24 h-24 rounded-full bg-white/30 blur-2xl animate-pulse" />
         </div>
-        {/* 切り替わる実 */}
+        {/* 切り替わる実：生成画像があれば img、なければ SVG にフォールバック */}
         <div className="relative animate-jitter">
           <FruitVisual
-            type={type}
-            seed={seed}
-            paletteIndex={paletteIdx}
+            type={fruit.type}
+            seed={fruit.id}
+            paletteIndex={fruit.paletteIndex}
+            imagePath={`/fruits/${fruit.id}.png`}
             size={200}
           />
         </div>
