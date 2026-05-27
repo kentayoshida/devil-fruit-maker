@@ -81,6 +81,8 @@ export const ResultCard = forwardRef<HTMLDivElement, Props>(function ResultCard(
               type={result.type}
               seed={result.name.en}
               paletteIndex={result.paletteIndex}
+              imagePath={result.imagePath}
+              alt={result.name[lang]}
               size={220}
             />
           </div>

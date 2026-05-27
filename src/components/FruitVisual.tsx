@@ -1,7 +1,8 @@
-// 悪魔の実のSVG。参考画像（バンプレストフィギュア等）を踏まえ、
-// 表面の渦巻きレリーフ、立体的グラデーション、複数の形バリエーション、巻きひげのヘタを再現
+// 悪魔の実の表示。Imagen で事前生成した PNG があればそれを表示し、
+// 無ければ SVG（渦巻きレリーフ、立体的グラデーション）にフォールバックする
 "use client";
 
+import { useState } from "react";
 import type { FruitType } from "@/data/fruits";
 import { getPalette, paletteCount } from "@/data/palettes";
 
@@ -12,6 +13,10 @@ interface Props {
   /** カラーパレットのインデックス。指定なければ seed から決定 */
   paletteIndex?: number;
   size?: number;
+  /** 事前生成画像のパス。指定があれば <img> を試し、失敗時に SVG にフォールバック */
+  imagePath?: string;
+  /** img 表示時の alt */
+  alt?: string;
 }
 
 type Shape = "sphere" | "apple" | "pear" | "heart" | "cluster" | "spike";
@@ -191,7 +196,41 @@ const SHAPE_PATHS: Record<Shape, string> = {
     "M 120 80 L 90 130 L 50 120 L 75 165 L 35 175 L 80 195 L 45 230 L 95 220 L 95 265 L 120 235 L 145 265 L 145 220 L 195 230 L 160 195 L 205 175 L 165 165 L 190 120 L 150 130 Z",
 };
 
-export function FruitVisual({ type, seed, paletteIndex, size = 220 }: Props) {
+export function FruitVisual({
+  type,
+  seed,
+  paletteIndex,
+  size = 220,
+  imagePath,
+  alt = "Devil Fruit",
+}: Props) {
+  // 画像ロード失敗時は SVG にフォールバック
+  const [imgFailed, setImgFailed] = useState(false);
+  const useImage = !!imagePath && !imgFailed;
+
+  if (useImage) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imagePath}
+        alt={alt}
+        width={size}
+        height={size}
+        loading="eager"
+        decoding="async"
+        onError={() => setImgFailed(true)}
+        crossOrigin="anonymous"
+        style={{
+          width: size,
+          height: size,
+          objectFit: "contain",
+          // PNG は白背景を透過化済み（scripts/generate-fruits.mts）
+          filter: "drop-shadow(0 8px 12px rgba(0,0,0,0.45))",
+        }}
+      />
+    );
+  }
+
   // パレット: 明示 paletteIndex があればそれを使用、なければ seed から決定
   const idx =
     paletteIndex !== undefined
