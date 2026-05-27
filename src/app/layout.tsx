@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
-const SITE_URL = "https://devil-fruit-maker.example.com";
+const SITE_URL = "https://devil-fruit-maker.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -54,7 +56,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ja" className="h-full antialiased">
-      <body className="min-h-full bg-slate-950 text-white">{children}</body>
+      <body className="min-h-full bg-slate-950 text-white">
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
