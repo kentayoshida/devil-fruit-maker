@@ -500,16 +500,8 @@ const ALL_FRUITS: GeneratedFruit[] = [...CANON, ...ORIGINAL];
 // 画像が public/fruits/{id}.png にまだ存在しない実の ID。
 // 原則として Imagen 生成画像のみを表示するため、これらはマッチング/ガチャから除外。
 // 画像生成完了後はこの Set から該当 ID を削除すること（git で履歴も残せる）。
-export const MISSING_IMAGE_IDS = new Set<string>([
-  "peta-peta",
-  "ori-tora",
-  "ori-pegasus",
-  "ori-cerberus",
-  "ori-orochi",
-  "ame-ame",
-  "kaze-kaze",
-  "iwa-iwa",
-]);
+// 全 73 種が生成済み。
+export const MISSING_IMAGE_IDS = new Set<string>([]);
 
 /** 全エントリ（メタデータ参照用、未生成も含む） */
 export const ALL_GENERATED_FRUITS: GeneratedFruit[] = ALL_FRUITS;
