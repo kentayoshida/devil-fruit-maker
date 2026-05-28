@@ -14,7 +14,8 @@ import sharp from "sharp";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { GENERATED_FRUITS, type GeneratedFruit, type Shape } from "../src/data/generated-fruits";
+// 生成スクリプトは ALL を見る必要がある（GENERATED_FRUITS は未生成IDを除外済みのため）
+import { ALL_GENERATED_FRUITS as GENERATED_FRUITS, type GeneratedFruit, type Shape } from "../src/data/generated-fruits";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
